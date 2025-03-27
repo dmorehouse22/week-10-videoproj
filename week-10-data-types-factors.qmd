@@ -26,10 +26,10 @@ Finally, create a summary table that shows:
 
 ```{r}
 flights |>
-  ___________(delayed = arr_delay > 0) |>
-  ___________(delayed) |>
-  ___________(total = _____(delayed), 
-              prop = _____(delayed))
+  mutate(delayed = arr_delay > 0) |>
+  drop_na(delayed) |>
+  summarize(total = sum(delayed), 
+              prop = mean(delayed))
 ```
 
 
@@ -44,12 +44,12 @@ Repeat the demonstration, some of whose code is below, to make a sensible graph 
 
 ```{r}
 gss_cat |>
-  drop_na(________) |>
-  group_by(________) |>
-  summarise(_________________) |>
+  drop_na(tvhours) |>
+  group_by(marital) |>
+  summarise(tv_avg = mean(tvhours)) |>
   ggplot() +
-    geom_point(mapping = aes(x = _______, 
-                             y = _________________________))
+    geom_point(mapping = aes(x = tv_avg, 
+                             y = fct_reorder(marital, tv_avg)))
 ```
 
 ## Your Turn 3
@@ -58,7 +58,20 @@ Do you think liberals or conservatives watch more TV?
 Compute average tv hours by party ID an then plot the results.
 
 ```{r}
-
+gss_cat |>
+  drop_na(tvhours) |>
+  mutate(partyid = partyid |>
+           fct_collapse(conservative = c("Strong republican", 
+                                                 "Not str republican",
+                                                 "Ind,near rep"), 
+                                liberal = c("Strong democrat",
+                                            "Not str democrat",
+                                            "Ind,near dem"))) |>
+  group_by(partyid) |>
+  summarise(tv_avg = mean(tvhours)) |>
+  ggplot() +
+    geom_point(mapping = aes(x = tv_avg, 
+                             y = fct_reorder(partyid, tv_avg)))
 ```
 
 
@@ -67,35 +80,36 @@ Compute average tv hours by party ID an then plot the results.
 
 ```{r}
 gss_cat |>
-  _______(tvhours) |>
-  _______(partyid = fct_recode(partyid,
+  drop_na(tvhours) |>
+  mutate(partyid = fct_recode(partyid,
                               "Republican, strong" = "Strong republican",
                               "Republican, weak" = "Not str republican",
                               "Independent, near rep" = "Ind,near rep",
                               "Independent, near dem" = "Ind,near dem",
                               "Democrat, weak" = "Not str democrat",
                               "Democrat, strong" = "Strong democrat")) |> 
-  _______(partyid) |>
-  _______(tv_avg = mean(tvhours)) |>
+  group_by(partyid) |>
+  summarize(tv_avg = mean(tvhours)) |>
   ggplot(aes(x = tv_avg, 
              y = fct_reorder(partyid, tv_avg))) +
   geom_point() + 
-  labs(y = "partyid")
+  labs(x = "Average Number of Hours of TV Reported Watched", y = "Political Party ID")
 ```
 
 ```{r}
 #levels(gss_cat$partyid)
 gss_cat |>
-  _______(tvhours) |>
-  _______(partyid = fct_collapse(partyid,
-                                conservative = c("Strong republican", 
+  drop_na(tvhours) |>
+  mutate(partyid = fct_collapse(partyid,
+                                Conservative = c("Strong republican", 
                                                  "Not str republican", 
                                                  "Ind,near rep"),
-                                liberal = c("Strong democrat", 
+                                Liberal = c("Strong democrat", 
                                             "Not str democrat", 
-                                            "Ind,near dem"))) |> 
-  ________(partyid) |>
-  ________(tv_avg = mean(tvhours)) |>
+                                            "Ind,near dem",
+                                            other_level = "Other"))) |> 
+  group_by(partyid) |>
+  summarize(tv_avg = mean(tvhours)) |>
   ggplot(aes(x = tv_avg, 
              y = fct_reorder(partyid, tv_avg))) +
   geom_point() + 
